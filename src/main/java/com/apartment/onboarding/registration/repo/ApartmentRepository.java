@@ -1,4 +1,4 @@
-package com.apartment.onboarding.registration;
+package com.apartment.onboarding.registration.repo;
 
 import com.apartment.onboarding.registration.bean.Apartment;
 import org.springframework.data.jpa.repository.JpaRepository;

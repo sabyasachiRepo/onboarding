@@ -2,6 +2,8 @@ package com.apartment.onboarding.registration;
 
 
 import com.apartment.onboarding.registration.bean.Apartment;
+import com.apartment.onboarding.registration.bean.student.Student;
+import com.apartment.onboarding.registration.repo.ApartmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,5 +33,9 @@ public class RegistrationController {
         apartmentRegistrationRepository.save(apartment);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
+
+
+
 
 }
