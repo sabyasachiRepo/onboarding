@@ -9,9 +9,15 @@ import com.apartment.onboarding.registration.service.user.UserService;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.fasterxml.jackson.core.exc.StreamWriteException;
+import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.bytebuddy.utility.RandomString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
@@ -43,6 +49,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @Validated
 @RequestMapping("/institute/api/v1/onboarding/")
 public class OnBoardingController {
+
+    private Logger logger= LoggerFactory.getLogger(OnBoardingController.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -117,12 +125,7 @@ public class OnBoardingController {
                 new ObjectMapper().writeValue(response.getOutputStream(), tokens);
             } catch (Exception exception) {
                 response.setHeader("error", exception.getMessage());
-                response.setStatus(FORBIDDEN.value());
-                //response.sendError(FORBIDDEN.value());
-                Map<String, String> error = new HashMap<>();
-                error.put("error_message", exception.getMessage());
-                response.setContentType(APPLICATION_JSON_VALUE);
-                new ObjectMapper().writeValue(response.getOutputStream(), error);
+                sendInvalidTokenResponse(response,exception.getMessage());
             }
         } else {
             throw new RuntimeException("Refresh token is missing");
@@ -170,5 +173,48 @@ public class OnBoardingController {
             return true;
         }
 
+    }
+
+    @PostMapping("/token/validate")
+    public void validateToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String authorizationHeader = request.getHeader(AUTHORIZATION);
+        logger.info("Received Auth header -> {}",authorizationHeader);
+        if (authorizationHeader != null && authorizationHeader.startsWith(jwtConfig.getTokenPrefix())) {
+            try {
+
+                String authToken = authorizationHeader.substring(jwtConfig.getTokenPrefix().length());
+
+                Algorithm algorithm = Algorithm.HMAC256(jwtConfig.getSecretKey().getBytes());
+                JWTVerifier verifier = JWT.require(algorithm).build();
+
+                DecodedJWT decodedJWT = verifier.verify(authToken);
+                String username = decodedJWT.getSubject();
+                User user = userService.getUser(username);
+
+                Map<String, String> userdata = new HashMap<>();
+                userdata.put("user_id", String.valueOf(user.getId()));
+                response.setContentType(APPLICATION_JSON_VALUE);
+                new ObjectMapper().writeValue(response.getOutputStream(), userdata);
+            }
+            catch (TokenExpiredException exception){
+                sendInvalidTokenResponse(response,"Token expired");
+
+            }
+            catch (JWTVerificationException exception) {
+                sendInvalidTokenResponse(response,"Invalid token");
+            }
+
+        } else {
+            sendInvalidTokenResponse(response,"Invalid token");
+        }
+    }
+
+    private static void sendInvalidTokenResponse(HttpServletResponse response,String message) throws IOException {
+        response.setHeader("message",message);
+        response.setStatus(FORBIDDEN.value());
+        Map<String, String> error = new HashMap<>();
+        error.put("error_message", message);
+        response.setContentType(APPLICATION_JSON_VALUE);
+        new ObjectMapper().writeValue(response.getOutputStream(), error);
     }
 }

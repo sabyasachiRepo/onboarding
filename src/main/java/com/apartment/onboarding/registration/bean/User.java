@@ -1,19 +1,20 @@
 package com.apartment.onboarding.registration.bean;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.apartment.onboarding.course.Course;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 @Entity
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,5 +43,12 @@ public class User {
 
     @ManyToOne(fetch = FetchType.EAGER)
     private Role role;
+
+    @ManyToMany
+    @JoinTable(name = "USER_COURSE",
+            joinColumns = @JoinColumn(name = "USER_ID"),
+            inverseJoinColumns = @JoinColumn(name = "COURSE_ID")
+    )
+    private List<Course> courses;
 
 }

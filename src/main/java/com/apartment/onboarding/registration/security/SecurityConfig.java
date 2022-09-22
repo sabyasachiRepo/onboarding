@@ -41,11 +41,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         usernameAndPasswordAuthenticationFilter.setFilterProcessesUrl("/institute/api/v1/onboarding/login");
         http.csrf().disable();
         http.sessionManagement().sessionCreationPolicy(STATELESS);
-        http.authorizeRequests().antMatchers("/institute/api/v1/onboarding/login/**","/institute/api/v1/onboarding/token/refresh/**","/institute/api/v1/onboarding/registration/**","/").permitAll();
+       /* http.authorizeRequests().antMatchers("/institute/api/v1/onboarding/login/**","/institute/api/v1/onboarding/token/**","/institute/api/v1/onboarding/registration/**","/").permitAll();
         http.authorizeRequests().antMatchers("/institute/api/v1/**","institute/api/v1/**").authenticated();
-        http.authorizeRequests().anyRequest().permitAll();
+*/        http.authorizeRequests().anyRequest().permitAll();
         http.addFilter(usernameAndPasswordAuthenticationFilter);
-        http.addFilterAfter(new JwtTokenVerifierFilter(jwtConfig), JwtUsernameAndPasswordAuthenticationFilter.class);
+       // http.addFilterAfter(new JwtTokenVerifierFilter(jwtConfig), JwtUsernameAndPasswordAuthenticationFilter.class);
 
     }
 

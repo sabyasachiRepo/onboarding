@@ -1,8 +1,10 @@
 package com.apartment.onboarding;
 
+import com.apartment.onboarding.course.Course;
 import com.apartment.onboarding.registration.bean.Institute;
 import com.apartment.onboarding.registration.bean.InstituteAddress;
 import com.apartment.onboarding.registration.bean.Role;
+import com.apartment.onboarding.registration.repo.CourseRepository;
 import com.apartment.onboarding.registration.repo.InstituteAddressRepository;
 import com.apartment.onboarding.registration.repo.InstituteRepository;
 import com.apartment.onboarding.registration.repo.RoleRepository;
@@ -22,11 +24,16 @@ public class InstituteData implements CommandLineRunner {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private CourseRepository courseRepository;
+
 
 
     @Override
     public void run(String... args) throws Exception {
         //saveData();
+
+
     }
 
     private void saveData() {
@@ -83,5 +90,32 @@ public class InstituteData implements CommandLineRunner {
         roleRepository.save(role1);
         roleRepository.save(role2);
         roleRepository.save(role3);
+
+
+
+        Course course1=new Course();
+        course1.setName("Java");
+
+        Course course2=new Course();
+        course2.setName("Python");
+
+        Course course3=new Course();
+        course3.setName("C++");
+
+        Course course4=new Course();
+        course4.setName("Java Script");
+
+        Course course5=new Course();
+        course5.setName("AWS");
+
+        Course course6=new Course();
+        course6.setName("Software Testing");
+
+        courseRepository.save(course1);
+        courseRepository.save(course2);
+        courseRepository.save(course3);
+        courseRepository.save(course4);
+        courseRepository.save(course5);
+        courseRepository.save(course6);
     }
 }
