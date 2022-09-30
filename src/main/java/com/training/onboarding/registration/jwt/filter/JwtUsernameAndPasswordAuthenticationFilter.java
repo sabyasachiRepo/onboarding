@@ -5,6 +5,8 @@ import com.training.onboarding.registration.jwt.UsernameAndPasswordAuthenticatio
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.training.onboarding.registration.utils.Util;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -12,6 +14,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -28,14 +31,19 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 /*
     Verify the credentials by ourself(Spring security do it by default. We will override it )
  */
+
 public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
-    private final AuthenticationManager authenticationManager;
+    private final  AuthenticationManager authenticationManager;
     private final JwtConfig jwtConfig;
 
-    public JwtUsernameAndPasswordAuthenticationFilter(AuthenticationManager authenticationManager, JwtConfig jwtConfig) {
+    private Util util;
+
+    public JwtUsernameAndPasswordAuthenticationFilter(AuthenticationManager authenticationManager, JwtConfig jwtConfig,Util util) {
         this.authenticationManager = authenticationManager;
         this.jwtConfig = jwtConfig;
+        this.util=util;
+
     }
 
     @Override
@@ -64,13 +72,6 @@ public class JwtUsernameAndPasswordAuthenticationFilter extends UsernamePassword
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
 
-      /*  String token = Jwts.builder()
-                .setSubject(authResult.getName())
-                .claim("authorities", authResult.getAuthorities())
-                .setIssuedAt(new Date())
-                .setExpiration(java.sql.Date.valueOf(LocalDate.now().plusDays(jwtConfig.getTokenExpirationAfterDays())))
-                .signWith(secretKey)
-                .compact();*/
 
 
         User user=(User) authResult.getPrincipal();

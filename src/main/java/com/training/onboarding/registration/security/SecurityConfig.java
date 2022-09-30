@@ -3,9 +3,11 @@ package com.training.onboarding.registration.security;
 import com.training.onboarding.registration.jwt.JwtConfig;
 import com.training.onboarding.registration.jwt.filter.JwtUsernameAndPasswordAuthenticationFilter;
 import com.training.onboarding.registration.service.user.UserServiceImpl;
+import com.training.onboarding.registration.utils.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -34,9 +36,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private JwtConfig jwtConfig;
 
+    @Autowired
+    private Util util;
+
+
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        JwtUsernameAndPasswordAuthenticationFilter usernameAndPasswordAuthenticationFilter = new JwtUsernameAndPasswordAuthenticationFilter(authenticationManager(), jwtConfig);
+        JwtUsernameAndPasswordAuthenticationFilter usernameAndPasswordAuthenticationFilter = new JwtUsernameAndPasswordAuthenticationFilter(authenticationManager(), jwtConfig,util);
         usernameAndPasswordAuthenticationFilter.setFilterProcessesUrl("/institute/api/v1/onboarding/login");
         http.csrf().disable();
         http.sessionManagement().sessionCreationPolicy(STATELESS);
@@ -63,5 +70,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         provider.setUserDetailsService(applicationUserService);
         return provider;
     }
+
+
 
 }
