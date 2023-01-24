@@ -1,6 +1,7 @@
 package com.training.onboarding.registration.service.user;
 
 import com.training.onboarding.registration.bean.InstituteResponse;
+import com.training.onboarding.registration.bean.Institutes;
 import com.training.onboarding.registration.bean.User;
 import com.training.onboarding.registration.ports.api.OnboardingDataPort;
 import com.training.onboarding.registration.ports.spi.OnboardingPersistencePort;
@@ -33,8 +34,10 @@ public class OnboardingDataPortImpl implements OnboardingDataPort {
     }
 
     @Override
-    public List<InstituteResponse> getInstitutes() {
-        return onboardingPersistencePort.getInstitutes();
+    public Institutes getInstitutes() {
+        Institutes institutes=new Institutes();
+        institutes.setInstitutes(onboardingPersistencePort.getInstitutes());
+        return institutes;
     }
 
     @Override

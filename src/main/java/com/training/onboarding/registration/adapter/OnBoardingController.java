@@ -1,7 +1,14 @@
 package com.training.onboarding.registration.adapter;
 
 
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.Message;
 import com.training.onboarding.registration.bean.InstituteResponse;
+import com.training.onboarding.registration.bean.Institutes;
 import com.training.onboarding.registration.bean.Role;
 import com.training.onboarding.registration.bean.User;
 import com.training.onboarding.registration.jwt.JwtConfig;
@@ -20,6 +27,8 @@ import net.bytebuddy.utility.RandomString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,7 +56,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequestMapping("/institute/api/v1/onboarding/")
 public class OnBoardingController {
 
-    private Logger logger= LoggerFactory.getLogger(OnBoardingController.class);
+    private Logger logger = LoggerFactory.getLogger(OnBoardingController.class);
 
 
     @Autowired
@@ -65,9 +74,12 @@ public class OnBoardingController {
     @Autowired
     private Util util;
 
+    @Value("${app.firebase-configuration-file}")
+    private String firebaseConfigPath;
+
     @PostMapping("/registration")
     public ResponseEntity studentRegistration(@Valid @RequestBody User user, HttpServletRequest httpServletRequest) {
-        onboardingDataPort.registerNewUser(user,httpServletRequest);
+        onboardingDataPort.registerNewUser(user, httpServletRequest);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -102,7 +114,7 @@ public class OnBoardingController {
                 new ObjectMapper().writeValue(response.getOutputStream(), tokens);
             } catch (Exception exception) {
                 response.setHeader("error", exception.getMessage());
-                sendInvalidTokenResponse(response,exception.getMessage());
+                sendInvalidTokenResponse(response, exception.getMessage());
             }
         } else {
             throw new RuntimeException("Refresh token is missing");
@@ -111,11 +123,10 @@ public class OnBoardingController {
     }
 
 
-
     @PostMapping("/token/validate")
     public void validateToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String authorizationHeader = request.getHeader(AUTHORIZATION);
-        logger.info("Received Auth header -> {}",authorizationHeader);
+        logger.info("Received Auth header -> {}", authorizationHeader);
         if (authorizationHeader != null && authorizationHeader.startsWith(jwtConfig.getTokenPrefix())) {
             try {
 
@@ -130,25 +141,23 @@ public class OnBoardingController {
 
                 Map<String, String> userdata = new HashMap<>();
                 userdata.put("user_id", String.valueOf(user.getId()));
-                userdata.put("user_role",String.valueOf(user.getRole().getName()));
+                userdata.put("user_role", String.valueOf(user.getRole().getName()));
                 response.setContentType(APPLICATION_JSON_VALUE);
                 new ObjectMapper().writeValue(response.getOutputStream(), userdata);
-            }
-            catch (TokenExpiredException exception){
-                sendInvalidTokenResponse(response,"Token expired");
+            } catch (TokenExpiredException exception) {
+                sendInvalidTokenResponse(response, "Token expired");
 
-            }
-            catch (JWTVerificationException exception) {
-                sendInvalidTokenResponse(response,"Invalid token");
+            } catch (JWTVerificationException exception) {
+                sendInvalidTokenResponse(response, "Invalid token");
             }
 
         } else {
-            sendInvalidTokenResponse(response,"Invalid token");
+            sendInvalidTokenResponse(response, "Invalid token");
         }
     }
 
-    private static void sendInvalidTokenResponse(HttpServletResponse response,String message) throws IOException {
-        response.setHeader("message",message);
+    private static void sendInvalidTokenResponse(HttpServletResponse response, String message) throws IOException {
+        response.setHeader("message", message);
         response.setStatus(FORBIDDEN.value());
         Map<String, String> error = new HashMap<>();
         error.put("error_message", message);
@@ -157,8 +166,37 @@ public class OnBoardingController {
     }
 
     @GetMapping("/institutes")
-    public @ResponseBody List<InstituteResponse> getInstitutes() {
+    public @ResponseBody Institutes getInstitutes() {
         return onboardingDataPort.getInstitutes();
+    }
+
+    @GetMapping("/send-push/{token}")
+    public ResponseEntity sendPushNote(@PathVariable String token) {
+        try {
+            FirebaseOptions options = new FirebaseOptions.Builder()
+                    .setCredentials(GoogleCredentials.fromStream(new ClassPathResource(firebaseConfigPath).getInputStream())).build();
+            if(FirebaseApp.getApps().isEmpty()) {
+                FirebaseApp.initializeApp(options);
+            }
+
+
+            Message message = Message.builder()
+                    .putData("score", "850")
+                    .putData("content", "This notification is from server")
+                    .setToken(token)
+                    .build();
+
+      // Send a message to the device corresponding to the provided
+      // registration token.
+            String response = FirebaseMessaging.getInstance().send(message);
+            // Response is a message ID string.
+            System.out.println("Successfully sent message: " + response);
+
+            return ResponseEntity.status(HttpStatus.OK).build();
+        } catch (IOException | FirebaseMessagingException e) {
+            return ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).build();
+        }
+
     }
 
 }
