@@ -11,6 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Institutes {
+
     private List<InstituteResponse> institutes;
     public void setInstitutes(List<InstituteResponse> institutes) {
         this.institutes=institutes;
