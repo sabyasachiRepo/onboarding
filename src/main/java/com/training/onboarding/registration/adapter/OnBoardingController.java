@@ -2,6 +2,7 @@ package com.training.onboarding.registration.adapter;
 
 
 import com.training.onboarding.registration.bean.InstituteResponse;
+import com.training.onboarding.registration.bean.Institutes;
 import com.training.onboarding.registration.bean.Role;
 import com.training.onboarding.registration.bean.User;
 import com.training.onboarding.registration.jwt.JwtConfig;
@@ -157,7 +158,7 @@ public class OnBoardingController {
     }
 
     @GetMapping("/institutes")
-    public @ResponseBody List<InstituteResponse> getInstitutes() {
+    public @ResponseBody Institutes getInstitutes() {
         return onboardingDataPort.getInstitutes();
     }
 
