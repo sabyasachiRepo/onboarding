@@ -48,7 +48,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequestMapping("/institute/api/v1/onboarding/")
 public class OnBoardingController {
 
-    private Logger logger= LoggerFactory.getLogger(OnBoardingController.class);
+    private Logger logger = LoggerFactory.getLogger(OnBoardingController.class);
 
 
     @Autowired
@@ -68,8 +68,26 @@ public class OnBoardingController {
 
     @PostMapping("/registration")
     public ResponseEntity studentRegistration(@Valid @RequestBody User user, HttpServletRequest httpServletRequest) {
-        onboardingDataPort.registerNewUser(user,httpServletRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+
+        Map<String, String> responseBody = new HashMap<>();
+
+        try {
+
+            User registeredUser = onboardingDataPort.getUserByEmail(user.getEmail());
+            if (registeredUser == null) {
+                onboardingDataPort.registerNewUser(user, httpServletRequest);
+                responseBody.put("status","200");
+                responseBody.put("message", "New user created");
+                return ResponseEntity.status(HttpStatus.CREATED).body(responseBody);
+            }
+            responseBody.put("status","400");
+            responseBody.put("message", "User with " +user.getEmail()+ " already exists");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
+        } catch (Exception e) {
+            responseBody.put("status","500");
+            responseBody.put("message", "Internal Server Error");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseBody);
+        }
     }
 
 
@@ -103,7 +121,7 @@ public class OnBoardingController {
                 new ObjectMapper().writeValue(response.getOutputStream(), tokens);
             } catch (Exception exception) {
                 response.setHeader("error", exception.getMessage());
-                sendInvalidTokenResponse(response,exception.getMessage());
+                sendInvalidTokenResponse(response, exception.getMessage());
             }
         } else {
             throw new RuntimeException("Refresh token is missing");
@@ -112,11 +130,10 @@ public class OnBoardingController {
     }
 
 
-
     @PostMapping("/token/validate")
     public void validateToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String authorizationHeader = request.getHeader(AUTHORIZATION);
-        logger.info("Received Auth header -> {}",authorizationHeader);
+        logger.info("Received Auth header -> {}", authorizationHeader);
         if (authorizationHeader != null && authorizationHeader.startsWith(jwtConfig.getTokenPrefix())) {
             try {
 
@@ -131,25 +148,23 @@ public class OnBoardingController {
 
                 Map<String, String> userdata = new HashMap<>();
                 userdata.put("user_id", String.valueOf(user.getId()));
-                userdata.put("user_role",String.valueOf(user.getRole().getName()));
+                userdata.put("user_role", String.valueOf(user.getRole().getName()));
                 response.setContentType(APPLICATION_JSON_VALUE);
                 new ObjectMapper().writeValue(response.getOutputStream(), userdata);
-            }
-            catch (TokenExpiredException exception){
-                sendInvalidTokenResponse(response,"Token expired");
+            } catch (TokenExpiredException exception) {
+                sendInvalidTokenResponse(response, "Token expired");
 
-            }
-            catch (JWTVerificationException exception) {
-                sendInvalidTokenResponse(response,"Invalid token");
+            } catch (JWTVerificationException exception) {
+                sendInvalidTokenResponse(response, "Invalid token");
             }
 
         } else {
-            sendInvalidTokenResponse(response,"Invalid token");
+            sendInvalidTokenResponse(response, "Invalid token");
         }
     }
 
-    private static void sendInvalidTokenResponse(HttpServletResponse response,String message) throws IOException {
-        response.setHeader("message",message);
+    private static void sendInvalidTokenResponse(HttpServletResponse response, String message) throws IOException {
+        response.setHeader("message", message);
         response.setStatus(FORBIDDEN.value());
         Map<String, String> error = new HashMap<>();
         error.put("error_message", message);
