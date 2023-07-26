@@ -40,7 +40,7 @@ public class JwtTokenVerifierFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        if (request.getServletPath().equals("/donate/api/v1/login") || request.getServletPath().equals("/donate/api/v1/token/refresh") ) {
+        if (request.getServletPath().equals("/institute/api/v1/login") || request.getServletPath().equals("/institute/api/v1/token/refresh") ) {
             filterChain.doFilter(request, response);
         } else {
             String authorizationHeader = request.getHeader(AUTHORIZATION);

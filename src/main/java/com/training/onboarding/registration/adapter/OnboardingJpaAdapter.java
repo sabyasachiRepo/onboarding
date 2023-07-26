@@ -8,11 +8,16 @@ import com.training.onboarding.registration.repo.InstituteRepository;
 import com.training.onboarding.registration.repo.OnboardingMapper;
 import com.training.onboarding.registration.repo.RoleRepository;
 import com.training.onboarding.registration.repo.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
 public class OnboardingJpaAdapter implements OnboardingPersistencePort {
+
+    private Logger logger = LoggerFactory.getLogger(OnboardingJpaAdapter.class);
+
 
     @Autowired
     private InstituteRepository instituteRepository;
@@ -39,8 +44,12 @@ public class OnboardingJpaAdapter implements OnboardingPersistencePort {
     @Override
     public void addRoleToUser(String userEmail, String roleName) {
         User user=userRepo.findByEmail(userEmail);
+        logger.info("User info we got for "+userEmail+" is " +user);
         Role role=roleRepo.findByName(roleName);
+        logger.info("Role info we got for "+roleName+" is " +role);
+
         user.setRole(role);
+        userRepo.save(user);
     }
 
     @Override
